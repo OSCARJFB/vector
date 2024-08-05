@@ -11,17 +11,22 @@ typedef void* cArray_ptr;
 typedef struct cVector
 {
 	int sizeInBytes;
-	size_t size, index;
+	size_t size, end;
 	cArray_ptr v_array;
 } cVector;
 
-typedef struct
-{
-	int a, b, c, d;
-} Test;
+// Add an item at the end of the vector.
+// cVector_ptr vec_ptr: A pointer to a vector object.
+// void* item: The address of the variable being pushed.
+inline cVector_ptr cVectorPushBack(cVector_ptr vec_ptr, void* item);
 
-inline void cVectorPushBack(cVector_ptr vec, void* item);
+// Fetches the current size of the vector.
+// cVector_ptr vec_ptr: A pointer to a vector object.
 inline size_t cVectorSize(cVector_ptr vec_ptr);
-void* cVectorCreate(size_t size, int sizeInBytes);
+
+// Create and allocate a new vector object.
+// size_t size: Initial size of the vector.
+// int sizeInBytes: use the sizeof(<your data type>) operator.
+cVector_ptr cVectorCreate(size_t size, int sizeInBytes);
 
 #endif
