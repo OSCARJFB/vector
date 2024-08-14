@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef void* cVector_ptr;
 typedef void* cArray_ptr;
@@ -28,5 +29,11 @@ inline size_t cVectorSize(cVector_ptr vec_ptr);
 // size_t size: Initial size of the vector.
 // int sizeInBytes: use the sizeof(<your data type>) operator.
 cVector_ptr cVectorCreate(size_t size, int sizeInBytes);
+
+// Free the memory of a vector.
+// Don't use c free() or c++ delete on a vector pointer.
+// Instead use cVectorDelete. It will make sure the metadata is properly deallocated.
+// cVector_ptr vec_ptr: A pointer to a vector object.
+void cVectorDelete(cVector_ptr vec_ptr);
 
 #endif

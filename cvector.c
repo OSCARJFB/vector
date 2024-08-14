@@ -11,8 +11,7 @@ static cVector_ptr cVectorResize(cVector_ptr vec_ptr)
 
 	memcpy(temp_vec, vec, sizeof(cVector) + vec->end * vec->sizeInBytes);
 	temp_vec->size = newSize;
-	free(vec);
-	vec = NULL;
+	cVectorDelete(vec_ptr);
 	return &temp_vec->v_array;
 }
 
@@ -55,10 +54,18 @@ cVector_ptr cVectorCreate(size_t size, int sizeInBytes)
 	return &vec->v_array;
 }
 
+void cVectorDelete(cVector_ptr vec_ptr)
+{
+	const int byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
+	cVector* vec = (char*)vec_ptr - byteOffset;
+	free(vec);
+	vec = NULL;
+}
+
 int main(void)
 {
 	int *test = cVectorCreate(10, sizeof(int));
-	for (int i = 0; i < 20; ++i)
+	for (int i = 0; i < 15; ++i)
 		test = cVectorPushBack(test, &i);
 
 	size_t size = cVectorSize(test);
@@ -66,7 +73,6 @@ int main(void)
 	for (int i = 0; i < size; ++i)
 		printf("%d ", test[i]);
 
-
-
+	cVectorDelete(test);
 	return 0;
 }
