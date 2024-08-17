@@ -1,18 +1,24 @@
 #include "cvector.h"
 
+/*
+typedef struct Test
+{
+	int x, y, z;
+} Test;
+*/
+
 static cVector_ptr cVectorResize(cVector_ptr vec_ptr)
 {
 	const int byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
 	const cVector* vec = (char*)vec_ptr - byteOffset;
 	const size_t newSize = vec->size * 2;
-	cVector *temp_vec = malloc(newSize);
-	if (!temp_vec)
+	
+	cVector* new_vec = realloc(vec, vec->sizeInBytes * newSize + sizeof(cVector));
+	if (!new_vec)
 		return vec_ptr;
-
-	memcpy(temp_vec, vec, sizeof(cVector) + vec->end * vec->sizeInBytes);
-	temp_vec->size = newSize;
-	cVectorDelete(vec_ptr);
-	return &temp_vec->v_array;
+	
+	new_vec->size = newSize;
+	return &new_vec->v_array;
 }
 
 inline cVector_ptr cVectorPushBack(cVector_ptr vec_ptr, void* item)
@@ -64,14 +70,16 @@ void cVectorDelete(cVector_ptr vec_ptr)
 
 int main(void)
 {
-	int *test = cVectorCreate(10, sizeof(int));
-	for (int i = 0; i < 15; ++i)
-		test = cVectorPushBack(test, &i);
+	Test *test = cVectorCreate(10, sizeof(Test));
+	for (int i = 0; i < 13; ++i) {
+		Test testVal = { 1 + i, 2 + i, 3 + i };
+		test = cVectorPushBack(test, &testVal);
+	}
 
 	size_t size = cVectorSize(test);
 
-	for (int i = 0; i < size; ++i)
-		printf("%d ", test[i]);
+	for (int i = 0; i < size; ++i) 
+		printf("%d %d %d\n", test[i].x, test[i].y, test[i].z);
 
 	cVectorDelete(test);
 	return 0;
