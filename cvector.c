@@ -1,17 +1,10 @@
 #include "cvector.h"
 
-/*
-typedef struct Test
+static cVector_ptr cVectorIncrease(cVector_ptr vec_ptr)
 {
-	int x, y, z;
-} Test;
-*/
-
-static cVector_ptr cVectorResize(cVector_ptr vec_ptr)
-{
-	const int byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
-	const cVector* vec = (char*)vec_ptr - byteOffset;
-	const size_t newSize = vec->size * 2;
+	const int32_t byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
+	const cVector* vec = (int8_t*)vec_ptr - byteOffset;
+	const int64_t newSize = vec->size * 2;
 	
 	cVector* new_vec = realloc(vec, vec->sizeInBytes * newSize + sizeof(cVector));
 	if (!new_vec)
@@ -21,34 +14,54 @@ static cVector_ptr cVectorResize(cVector_ptr vec_ptr)
 	return &new_vec->v_array;
 }
 
-inline cVector_ptr cVectorPushBack(cVector_ptr vec_ptr, void* item)
+static cVector_ptr cVectorDecrease(cVector_ptr vec_ptr)
+{
+
+}
+
+cVector_ptr cVectorPushBack(cVector_ptr vec_ptr, void* item)
 {
 	if (!vec_ptr)
 		return vec_ptr;
 
-	const int byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
-	cVector* vec = (char*)vec_ptr - byteOffset;
+	const int32_t byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
+	cVector* vec = (int8_t*)vec_ptr - byteOffset;
 	if (vec->end == vec->size) {
-		vec_ptr = cVectorResize(vec_ptr);
-		vec = (char*)vec_ptr - byteOffset;
+		vec_ptr = cVectorIncrease(vec_ptr);
+		vec = (int8_t*)vec_ptr - byteOffset;
 	}
 
 	if(vec->end == 0)
 		memcpy(vec_ptr, item, vec->sizeInBytes);
 	else
-		memcpy((char*)vec_ptr + vec->sizeInBytes * vec->end, item, vec->sizeInBytes);
+		memcpy((int8_t*)vec_ptr + vec->sizeInBytes * vec->end, item, vec->sizeInBytes);
 	++vec->end;
 	return vec_ptr;
 }
 
+cVector_ptr cVectorPushAt(cVector_ptr vec_ptr, int64_t index, void* item)
+{
+
+}
+
+cVector_ptr cVectorRemoveBack(cVector_ptr vec_ptr)
+{
+
+}
+
+cVector_ptr cVectorRemoveAt(cVector_ptr vec_ptr, int64_t index)
+{
+
+}
+
 inline size_t cVectorSize(cVector_ptr vec_ptr)
 {
-	const int byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
-	cVector* vec = (char*)vec_ptr - byteOffset;
+	const int32_t byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
+	cVector* vec = (int8_t*)vec_ptr - byteOffset;
 	return vec->end;
 }
 
-cVector_ptr cVectorCreate(size_t size, int sizeInBytes)
+cVector_ptr cVectorCreate(int64_t size, int32_t sizeInBytes)
 {
 	size = size <= 0 ? 10 : size;
 	cVector *vec = malloc((sizeInBytes * size + sizeof(cVector)));
@@ -63,24 +76,12 @@ cVector_ptr cVectorCreate(size_t size, int sizeInBytes)
 void cVectorDelete(cVector_ptr vec_ptr)
 {
 	const int byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
-	cVector* vec = (char*)vec_ptr - byteOffset;
+	cVector* vec = (int8_t*)vec_ptr - byteOffset;
 	free(vec);
 	vec = NULL;
 }
 
 int main(void)
 {
-	Test *test = cVectorCreate(10, sizeof(Test));
-	for (int i = 0; i < 13; ++i) {
-		Test testVal = { 1 + i, 2 + i, 3 + i };
-		test = cVectorPushBack(test, &testVal);
-	}
-
-	size_t size = cVectorSize(test);
-
-	for (int i = 0; i < size; ++i) 
-		printf("%d %d %d\n", test[i].x, test[i].y, test[i].z);
-
-	cVectorDelete(test);
 	return 0;
 }
