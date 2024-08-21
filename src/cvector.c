@@ -11,22 +11,22 @@
 static cVector_ptr cVectorResize(cVector_ptr vec_ptr, bool shrink)
 {
 	const int32_t byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
-	const cVector* vec = (int8_t*)vec_ptr - byteOffset;
-	const int64_t newSize = shrink ? vec->size / 2 : vec->size * 2;
+	const cVector* vec = (uint8_t*)vec_ptr - byteOffset;
+	const int64_t newSize = shrink ? vec->capacity / 2 : vec->capacity * 2;
 
 	cVector* new_vec = realloc(vec, vec->sizeInBytes * newSize + sizeof(cVector));
 	if (!new_vec)
 		return vec_ptr;
 
-	new_vec->size = newSize;
+	new_vec->capacity = newSize;
 	return &new_vec->v_array;
 }
 
 inline int64_t cVectorSize(cVector_ptr vec_ptr)
 {
 	const int32_t byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
-	cVector* vec = (int8_t*)vec_ptr - byteOffset;
-	return vec->end;
+	cVector* vec = (uint8_t*)vec_ptr - byteOffset;
+	return vec->size;
 }
 
 cVector_ptr cVectorPushBack(cVector_ptr vec_ptr, void* item)
@@ -35,30 +35,48 @@ cVector_ptr cVectorPushBack(cVector_ptr vec_ptr, void* item)
 		return vec_ptr;
 
 	const int32_t byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
-	cVector* vec = (int8_t*)vec_ptr - byteOffset;
-	if (vec->end == vec->size) {
+	cVector* vec = (uint8_t*)vec_ptr - byteOffset;
+	if (vec->size == vec->capacity) {
 		vec_ptr = cVectorResize(vec_ptr, false);
-		vec = (int8_t*)vec_ptr - byteOffset;
+		vec = (uint8_t*)vec_ptr - byteOffset;
 	}
 
-	if(vec->end == 0)
+	if(vec->size == 0)
 		memcpy(vec_ptr, item, vec->sizeInBytes);
 	else
-		memcpy((int8_t*)vec_ptr + vec->sizeInBytes * vec->end, item, vec->sizeInBytes);
-	++vec->end;
+		memcpy((uint8_t*)vec_ptr + vec->sizeInBytes * vec->size, item, vec->sizeInBytes);
+	++vec->size;
 	return vec_ptr;
 }
 
 cVector_ptr cVectorPushAt(cVector_ptr vec_ptr, int64_t index, void* item)
 {
+	const int32_t byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
+	cVector* vec = (uint8_t*)vec_ptr - byteOffset;
+	if (vec->size == vec->capacity) {
+		vec_ptr = cVectorResize(vec_ptr, false);
+		vec = (uint8_t*)vec_ptr - byteOffset;
+	}
 
+	uint8_t* oldItem = malloc(vec->sizeInBytes);
+	if (!oldItem)
+		return vec_ptr;
+	memcpy(oldItem, (uint8_t*)vec_ptr + index, vec->sizeInBytes);
+	
+	// for(uint8_t)
+	
+
+
+
+	++vec->size;
+	return vec_ptr;
 }
 
 cVector_ptr cVectorRemoveBack(cVector_ptr vec_ptr)
 {
 	const int32_t byteOffset = sizeof(cVector) - sizeof(cVector_ptr);
-	cVector* vec = (int8_t*)vec_ptr - byteOffset;
-	if (--vec->end == vec->size / 2 && vec->size != 10)
+	cVector* vec = (uint8_t*)vec_ptr - byteOffset;
+	if (--vec->size == vec->capacity / 2 && vec->capacity != 10)
 		vec_ptr = cVectorResize(vec_ptr, true);
 	return vec_ptr;
 }
@@ -75,8 +93,8 @@ cVector_ptr cVectorCreate(int64_t size, int32_t sizeInBytes)
 	if (!vec)
 		return NULL;
 	vec->sizeInBytes = sizeInBytes;
-	vec->size = size;
-	vec->end = 0;
+	vec->capacity = size;
+	vec->size = 0;
 	return &vec->v_array;
 }
 
@@ -94,6 +112,9 @@ int32_t main(void)
 	for (int i = 0; i < 100; ++i)
 		vec_number = cVectorPushBack(vec_number, &i);
 	
+	int push = 100;
+	cVectorPushAt(vec_number, 2, &push);
+
 	for (int i = 0; i < cVectorSize(vec_number); ++i)
 		printf("%d ", vec_number[i]);
 

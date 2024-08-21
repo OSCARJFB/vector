@@ -24,7 +24,7 @@ typedef void* cVector_Item_ptr;
 typedef struct cVector
 {
 	int32_t sizeInBytes;
-	int64_t size, end;
+	int64_t capacity, size;
 	cVector_Array_ptr v_array;
 } cVector;
 
