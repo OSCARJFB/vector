@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 // Remove later
 #include <stdio.h>
@@ -59,9 +60,8 @@ inline size_t cVectorSize(cVector_ptr vec_ptr);
 
 // Create and allocate a new vector object.
 // parameters: 
-// - int64_t size: Initial size of the vector.
 // - int32_t sizeInBytes: use the sizeof(<your data type>) operator.
-cVector_ptr cVectorCreate(int64_t size, int32_t sizeInBytes);
+cVector_ptr cVectorCreate(int32_t sizeInBytes);
 
 // Free the memory of a vector.
 // Don't use c free() or c++ delete on a vector pointer.
