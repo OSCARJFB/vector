@@ -21,11 +21,6 @@ static vector_ptr vec_resize(vector_ptr vec_ptr, bool shrink)
 	return &new_vec->v_array;
 }
 
-static vector_ptr vec_moveItemsleft()
-{
-
-}
-
 inline int64_t vec_size(vector_ptr vec_ptr)
 {
 	cVector* vec = (uint8_t*)vec_ptr - offsetof(cVector, v_array);
@@ -65,10 +60,22 @@ vector_ptr vec_pushAtIndex(vector_ptr vec_ptr, int64_t index, void* item)
 	if (!arrayTemp)
 		return vec_ptr;
 	memcpy(arrayTemp, vec_ptr, vec->capacity * vec->sizeInBytes);
-	memcpy((uint8_t*)vec_ptr + vec->sizeInBytes * index, item, vec->sizeInBytes);
-	uint8_t* dest = (uint8_t*)vec_ptr + vec->sizeInBytes * (index + 1);
-	uint8_t* src = (uint8_t*)arrayTemp + vec->sizeInBytes * index;
-	memcpy(dest, src, (vec->capacity - index) * vec->sizeInBytes);
+	
+	if (index)
+		memcpy((uint8_t*)vec_ptr + vec->sizeInBytes * index, item, vec->sizeInBytes);
+	else
+		memcpy((uint8_t*)vec_ptr + vec->sizeInBytes, item, vec->sizeInBytes);
+	
+	uint8_t* dest = index ? (uint8_t*)vec_ptr + vec->sizeInBytes * (index + 1) :
+		(uint8_t*)vec_ptr + vec->sizeInBytes * 2;
+	uint8_t* src = index ? (uint8_t*)arrayTemp + vec->sizeInBytes * index :
+		(uint8_t*)arrayTemp + vec->sizeInBytes;
+	
+	if(index)
+		memcpy(dest, src, (vec->capacity - index) * vec->sizeInBytes);
+	else 
+		memcpy(dest, src, vec->capacity * vec->sizeInBytes);
+
 	free(arrayTemp);
 	arrayTemp = NULL;
 	++vec->size;
@@ -88,17 +95,24 @@ vector_ptr vec_removeAtIndex(vector_ptr vec_ptr, int64_t index)
 {
 	const int32_t byteOffset = offsetof(cVector, v_array);
 	cVector* vec = (uint8_t*)vec_ptr - byteOffset;
-	if (vec->size == vec->capacity) {
-		vec_ptr = vec_resize(vec_ptr, false);
-		vec = (uint8_t*)vec_ptr - byteOffset;
+	if (--vec->size < vec->capacity / 2)
+		return vec_resize(vec_ptr, false);
+
+	uint8_t* endItem = malloc(vec->sizeInBytes);
+	if (!endItem)
+		return NULL;
+
+	int64_t i;
+	for (i = index ? index : 0; i < vec->size; ++i) {
+		if (i == vec->size)
+			break;
+
+		uint8_t* src = (uint8_t*)vec_ptr + (i + 1) * vec->sizeInBytes;
+		uint8_t* dest = (uint8_t*)vec_ptr + i * vec->sizeInBytes;
+		for (int32_t i = 0; i < vec->sizeInBytes; ++i)
+			*dest++ = *src++;
 	}
 
-	if (index == vec->size - 1) {
-		--vec->size;
-		return vec_ptr;
-	}
-
-	--vec->size;
 	return vec_ptr;
 }
 
@@ -126,10 +140,13 @@ int32_t main(void)
 	for (int i = 0; i < 100; ++i)
 		vec_num = vec_pushToBack(vec_num, &i);
 	
-	for(int i = 0; i < 50; ++i)
-		vec_num = vec_removeAtBack(vec_num);
+	//vec_num = vec_removeAtIndex(vec_num, 2);
+	//vec_num = vec_removeAtIndex(vec_num, 4);
+	int push = 94;
+	vec_num = vec_pushAtIndex(vec_num, 0, &push);
 	
-	int size = vec_size(vec_num);
+	for (int i = 0; i < 20; ++i)
+		printf("%d\n", vec_num[i]);
 
 	vec_delete(vec_num);
 
