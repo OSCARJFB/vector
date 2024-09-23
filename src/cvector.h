@@ -55,14 +55,14 @@ typedef struct
 	parameter: 
 	- vector* vec_ptr: A pointer to a vector object.
 */
-inline int64_t vec_size(vector* vec_ptr);
+int64_t vec_size(vector* vec_ptr);
 
 /*
 	Fetches the current capacity of the vector.
 	parameter:
 	- vector* vec_ptr: A pointer to a vector object.
 */
-inline int64_t vec_capacity(vector* vec_ptr);
+int64_t vec_capacity(vector* vec_ptr);
 
 /*
 	Add an item at the end of the vector.
