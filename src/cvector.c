@@ -23,12 +23,14 @@ static vector* vec_resize(vector* vec_ptr, bool shrink)
 
 int64_t vec_size(vector* vec_ptr)
 {
+	assert(vec_ptr && "vec_size, vec_ptr was NULL");
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	return vec->size;
 }
 
 int64_t vec_capacity(vector* vec_ptr)
 {
+	assert(vec_ptr && "vec_capacity, vec_ptr was NULL");
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	return vec->capacity;
 }
@@ -36,9 +38,7 @@ int64_t vec_capacity(vector* vec_ptr)
 
 vector* vec_pushBack(vector* vec_ptr, void* item)
 {
-	if (!vec_ptr)
-		return vec_ptr;
-
+	assert(vec_ptr && "vec_pushBack, vec_ptr was NULL");
 	const int32_t byteOffset = offsetof(cVector, v_array);
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
 	if (vec->size == vec->capacity) {
@@ -56,6 +56,7 @@ vector* vec_pushBack(vector* vec_ptr, void* item)
 
 vector* vec_push(vector* vec_ptr, int64_t index, void* item)
 {
+	assert(vec_ptr && "vec_push, vec_ptr was NULL");
 	const int32_t byteOffset = offsetof(cVector, v_array);
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
 	if (vec->size == vec->capacity) {
@@ -63,28 +64,46 @@ vector* vec_push(vector* vec_ptr, int64_t index, void* item)
 		vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
 	}
 
-	uint8_t* arrayTemp = malloc(vec->capacity * vec->sizeInBytes);
-	if (!arrayTemp)
-		return vec_ptr;
+	void* tmp1 = malloc(sizeof(vec->sizeInBytes));
+	void* tmp2 = malloc(sizeof(vec->sizeInBytes));
+	if (!tmp1)
+		return NULL;
 
-	memcpy(arrayTemp, vec_ptr, vec->capacity * vec->sizeInBytes);
-	memcpy((uint8_t*)vec_ptr + vec->sizeInBytes * (index ? index : 0), item, vec->sizeInBytes);
-
-	uint8_t* dest = index ? (uint8_t*)vec_ptr + vec->sizeInBytes * (index + 1) :
-		(uint8_t*)vec_ptr + vec->sizeInBytes * 2;
-	uint8_t* src = index ? (uint8_t*)arrayTemp + vec->sizeInBytes * index :
-		(uint8_t*)arrayTemp + vec->sizeInBytes;
-
-	memcpy(dest, src, (vec->capacity - index) * vec->sizeInBytes);
-
-	free(arrayTemp);
-	arrayTemp = NULL;
 	++vec->size;
+	for (int64_t i = index; i < vec->size; ++i) {
+		if (i == index) {
+			memcpy(tmp1, (uint8_t*)vec_ptr + (i + 1) * vec->sizeInBytes, vec->sizeInBytes);
+
+			memcpy(
+				(uint8_t*)vec_ptr + (i + 1) * vec->sizeInBytes,
+				(uint8_t*)vec_ptr + i * vec->sizeInBytes,
+				vec->sizeInBytes
+			);
+		}
+		else
+		{
+			memcpy(tmp2, (uint8_t*)vec_ptr + (i + 1) * vec->sizeInBytes, vec->sizeInBytes);
+
+			memcpy(
+				(uint8_t*)vec_ptr + (i + 1) * vec->sizeInBytes,
+				tmp1,
+				vec->sizeInBytes
+			);
+
+			memcpy(tmp1, tmp2, vec->sizeInBytes);
+		}
+	}
+
+	memcpy((uint8_t*)vec_ptr + index * vec->sizeInBytes, item, vec->sizeInBytes);
+	free(tmp1);
+	free(tmp2);
+	tmp1 = tmp2 = NULL;
 	return vec_ptr;
 }
 
 vector* vec_eraseBack(vector* vec_ptr)
 {
+	assert(vec_ptr && "vec_eraseBack, vec_ptr was NULL");
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	if (--vec->size < vec->capacity / 2)
 		vec_ptr = vec_resize(vec_ptr, true);
@@ -94,6 +113,7 @@ vector* vec_eraseBack(vector* vec_ptr)
 
 vector* vec_erase(vector* vec_ptr, int64_t index)
 {
+	assert(vec_ptr && "vec_erase, vec_ptr was NULL");
 	const int32_t byteOffset = offsetof(cVector, v_array);
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
 	if (--vec->size < vec->capacity / 2)
@@ -130,6 +150,7 @@ vector* vec_create(int32_t sizeInBytes)
 
 void vec_delete(vector** vec_ptr)
 {
+	assert(*vec_ptr && "vec_delete, vec_ptr pointed value was NULL");
 	cVector* vec = (cVector*)((int8_t*)*vec_ptr - offsetof(cVector, v_array));
 	*vec_ptr = NULL;
 	free(vec);
