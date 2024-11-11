@@ -20,3 +20,18 @@ This example show how to push an item to the end of the vector.
 ```
 vec_num = vec_pushBack(vec_num, &i);
 ```
+
+## Push at index
+This example show how to push an item to a specific index (index 5 in the example).
+
+```
+vec_num = vec_push(vec_num, 5, &i);
+```
+
+## 2d array like structure
+In this example it's shown how you may use the API to create a 2d like array.
+```
+int** vec_num2d = vec_create(sizeof(int));
+for (size_t i = 0; i < vec_size(vec_num2d); ++i)
+	vec_num2d[i] = vec_create(sizeof(int));
+```
