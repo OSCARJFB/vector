@@ -29,11 +29,11 @@ typedef struct cVector
 
 int64_t vec_size(vector* vec_ptr);
 int64_t vec_capacity(vector* vec_ptr);
-bool vec_pushBack(vector** vec_ptr, void* item);
-bool vec_push(vector** vec_ptr, int64_t index, void* item);
-bool vec_eraseBack(vector** vec_ptr);
-bool vec_erase(vector** vec_ptr, int64_t index);
-bool vec_create(int32_t sizeInBytes);
+vector* vec_pushBack(vector* vec_ptr, void* item);
+vector* vec_push(vector* vec_ptr, int64_t index, void* item);
+vector* vec_eraseBack(vector* vec_ptr);
+vector* vec_erase(vector* vec_ptr, int64_t index);
+vector* vec_create(int32_t sizeInBytes);
 void vec_delete(vector** vec_ptr);
 
 #endif
