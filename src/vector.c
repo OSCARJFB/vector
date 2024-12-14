@@ -6,12 +6,12 @@
 	Copyright(c) 2024 Oscar Bergström
 */
 
-#include "cvector.h"
+#include "vector.h"
 
 static vector* vec_resize(vector* vec_ptr, bool shrink)
 {
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
-	const int64_t newSize = shrink ? vec->capacity / 2 : vec->capacity * 2;
+	const int64_t newSize = shrink ? vec->size : vec->capacity * 2;
 
 	cVector* new_vec = realloc(vec, vec->sizeInBytes * newSize + sizeof(cVector));
 	if (!new_vec)
@@ -21,29 +21,31 @@ static vector* vec_resize(vector* vec_ptr, bool shrink)
 	return &new_vec->v_array;
 }
 
-int64_t vec_size(vector* vec_ptr)
+#ifdef _DEBUG
+
+size_t vec_size(vector* vec_ptr)
 {
 	assert(vec_ptr && "vec_size, vec_ptr was NULL");
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	return vec->size;
 }
 
-int64_t vec_capacity(vector* vec_ptr)
+size_t vec_capacity(vector* vec_ptr)
 {
 	assert(vec_ptr && "vec_capacity, vec_ptr was NULL");
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	return vec->capacity;
 }
 
+#endif // _DEBUG
 
 vector* vec_pushBack(vector* vec_ptr, void* item)
 {
 	assert(vec_ptr && "vec_pushBack, vec_ptr was NULL");
-	const int32_t byteOffset = offsetof(cVector, v_array);
-	cVector* vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
+	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	if (vec->size == vec->capacity) {
 		vec_ptr = vec_resize(vec_ptr, false);
-		vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
+		vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	}
 
 	if (vec->size == 0)
@@ -57,17 +59,28 @@ vector* vec_pushBack(vector* vec_ptr, void* item)
 vector* vec_push(vector* vec_ptr, int64_t index, void* item)
 {
 	assert(vec_ptr && "vec_push, vec_ptr was NULL");
-	const int32_t byteOffset = offsetof(cVector, v_array);
-	cVector* vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
+	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	if (vec->size == vec->capacity) {
 		vec_ptr = vec_resize(vec_ptr, false);
-		vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
+		vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
 	}
 
 	void* tmp1 = malloc(sizeof(vec->sizeInBytes));
 	void* tmp2 = malloc(sizeof(vec->sizeInBytes));
-	if (!tmp1)
+	if (!tmp1) {
+		if (tmp2) {
+			free(tmp2);
+			tmp2 = NULL;
+		}
 		return NULL;
+	}
+	else if (!tmp2) {
+		if (tmp1) {
+			free(tmp1);
+			tmp1 = NULL;
+		}
+		return NULL;
+	}
 
 	++vec->size;
 	for (int64_t i = index; i < vec->size; ++i) {
@@ -105,34 +118,35 @@ vector* vec_eraseBack(vector* vec_ptr)
 {
 	assert(vec_ptr && "vec_eraseBack, vec_ptr was NULL");
 	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
-	if (--vec->size < vec->capacity / 2)
+	--vec->size;
+	if (vec->size < vec->capacity / 4) {
 		vec_ptr = vec_resize(vec_ptr, true);
-
+	}
 	return vec_ptr;
 }
 
 vector* vec_erase(vector* vec_ptr, int64_t index)
 {
 	assert(vec_ptr && "vec_erase, vec_ptr was NULL");
-	const int32_t byteOffset = offsetof(cVector, v_array);
-	cVector* vec = (cVector*)((uint8_t*)vec_ptr - byteOffset);
-	if (--vec->size < vec->capacity / 2)
-		return vec_resize(vec_ptr, false);
+	cVector* vec = (cVector*)((uint8_t*)vec_ptr - offsetof(cVector, v_array));
+	--vec->size;
 
-	uint8_t* endItem = malloc(vec->sizeInBytes);
-	if (!endItem)
-		return NULL;
+	if (vec->size < vec->capacity / 4) {
+		return vec_resize(vec_ptr, true);
+	}
 
 	int64_t i;
 	for (i = index ? index : 0; i < vec->size; ++i) {
 		if (i == vec->size)
 			break;
-
-		uint8_t* src = (uint8_t*)vec_ptr + (i + 1) * vec->sizeInBytes;
-		uint8_t* dest = (uint8_t*)vec_ptr + i * vec->sizeInBytes;
-		memcpy(dest, src, vec->sizeInBytes);
+		memcpy(
+			(uint8_t*)vec_ptr + i * vec->sizeInBytes,
+			(uint8_t*)vec_ptr + (i + 1) * vec->sizeInBytes,
+			vec->sizeInBytes
+		);
 	}
 
+	--vec->size;
 	return vec_ptr;
 }
 
