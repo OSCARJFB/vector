@@ -3,7 +3,7 @@
 Is a lighweight library bringing C a general solution for construction of dynamic arrays.
 The library can allocate arrays of any datatype, native or user invented data structer.
 However this libarary is probably no where near as efficient as the std::vector of c++,
-but is easy to use and should be able to perform its basic purpose.
+but is easy to use and should be able to perform its basic purpose, bringing c a quick general solution for dynamic arrays.
 
 ## Creation a vector:
 This example show how a vector is created.
